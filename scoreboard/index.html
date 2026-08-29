@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Scoreboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="setup" id="setup">
+        <h1>Quiz Scoreboard</h1>
+
+        <input type="text" id="team1Name" placeholder="Team 1 name">
+        <input type="text" id="team2Name" placeholder="Team 2 name">
+
+        <input
+            type="number"
+            id="timeInput"
+            placeholder="Time in seconds"
+            min="1"
+        >
+
+        <button id="startButton">START</button>
+    </div>
+
+
+    <div class="game" id="game">
+
+        <div class="team">
+            <h2 id="team1Display">Team 1</h2>
+            <div class="score" id="team1Score">0</div>
+
+            <button class="plus" id="team1Plus">+1</button>
+            <button class="minus" id="team1Minus">-1</button>
+        </div>
+
+
+        <div class="middle">
+            <div class="timer" id="timer">60</div>
+            <button id="pauseButton">PAUSE</button>
+            <button id="resetButton">RESET</button>
+        </div>
+
+
+        <div class="team">
+            <h2 id="team2Display">Team 2</h2>
+            <div class="score" id="team2Score">0</div>
+
+            <button class="plus" id="team2Plus">+1</button>
+            <button class="minus" id="team2Minus">-1</button>
+        </div>
+
+    </div>
+
+
+    <div class="winner" id="winner"></div>
+
+
+    <script src="script.js"></script>
+
+</body>
+</html>

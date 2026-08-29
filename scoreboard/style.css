@@ -1,0 +1,167 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    font-family: Arial, sans-serif;
+    background: #181818;
+    color: white;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.setup {
+    text-align: center;
+    width: 400px;
+}
+
+.setup h1 {
+    font-size: 48px;
+    margin-bottom: 40px;
+}
+
+.setup input {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    margin: 15px 0;
+
+    font-size: 20px;
+    border-radius: 8px;
+    border: none;
+}
+
+.setup button {
+    width: 100%;
+    padding: 15px;
+    margin-top: 15px;
+
+    font-size: 22px;
+    font-weight: bold;
+
+    border: none;
+    border-radius: 8px;
+
+    background: #28a745;
+    color: white;
+
+    cursor: pointer;
+}
+
+.setup button:hover {
+    background: #218838;
+}
+
+.game {
+    display: none;
+
+    width: 90%;
+    max-width: 1100px;
+
+    justify-content: space-between;
+    align-items: center;
+
+    text-align: center;
+}
+
+.team {
+    width: 30%;
+}
+
+.team h2 {
+    font-size: 45px;
+    margin-bottom: 20px;
+}
+
+.score {
+    font-size: 140px;
+    font-weight: bold;
+    margin-bottom: 30px;
+}
+
+.team button,
+.middle button {
+    padding: 15px 30px;
+    margin: 5px;
+
+    font-size: 22px;
+    font-weight: bold;
+
+    border: none;
+    border-radius: 8px;
+
+    color: white;
+    cursor: pointer;
+}
+
+.plus {
+    background: #28a745;
+}
+
+.minus {
+    background: #dc3545;
+}
+
+.middle {
+    width: 25%;
+    text-align: center;
+}
+
+.timer {
+    font-size: 80px;
+    font-weight: bold;
+    margin-bottom: 30px;
+}
+
+#pauseButton {
+    background: #f0ad4e;
+}
+
+#resetButton {
+    background: #007bff;
+}
+
+.winner {
+    position: fixed;
+
+    top: 50%;
+    left: 50%;
+
+    transform: translate(-50%, -50%);
+
+    font-size: 70px;
+    font-weight: bold;
+
+    text-align: center;
+
+    display: none;
+}
+
+@media (max-width: 700px) {
+
+    .game {
+        flex-direction: column;
+        gap: 30px;
+    }
+
+    .team,
+    .middle {
+        width: 90%;
+    }
+
+    .team h2 {
+        font-size: 35px;
+    }
+
+    .score {
+        font-size: 90px;
+    }
+
+    .timer {
+        font-size: 60px;
+    }
+}
