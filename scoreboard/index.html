@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Scoreboard</title>
+  <title>Scoreboard Hub</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -10,44 +10,112 @@
   <main class="container">
     <header>
       <h1>Scoreboard</h1>
-      <p class="muted">Add players, adjust scores, and the board persists in your browser. Sorted by score (desc).</p>
+      <p class="muted">Add players, adjust scores, and the board persists in your browser. Switch modes to use the 1v1 Battle.</p>
+
+      <!-- Mode selector -->
+      <div class="mode-selector" role="tablist" aria-label="Modes">
+        <button id="modeLeaderboard" class="mode-btn active" role="tab" aria-selected="true">General Leaderboard</button>
+        <button id="modeBattle" class="mode-btn" role="tab" aria-selected="false">1v1 Battle</button>
+      </div>
     </header>
 
-    <form id="addForm" class="controls" onsubmit="return false;">
-      <div class="field">
-        <label for="name" class="sr-only">Player name</label>
-        <input id="name" placeholder="Player name" required autocomplete="off" />
+    <!-- === General Leaderboard (unchanged UI) === -->
+    <section id="leaderboardSection">
+      <form id="addForm" class="controls" onsubmit="return false;">
+        <div class="field">
+          <label for="name" class="sr-only">Player name</label>
+          <input id="name" placeholder="Player name" required autocomplete="off" />
+        </div>
+
+        <div class="field">
+          <label for="score" class="sr-only">Score</label>
+          <input id="score" type="number" value="0" />
+        </div>
+
+        <div class="actions">
+          <button id="addBtn" class="btn primary">Add / Update</button>
+          <button id="clearBtn" type="button" class="btn">Clear All</button>
+          <button id="exportBtn" type="button" class="btn">Export</button>
+          <button id="importToggle" type="button" class="btn">Import</button>
+        </div>
+      </form>
+
+      <div id="importArea" class="import hidden" aria-hidden="true">
+        <textarea id="importText" rows="4" placeholder='Paste JSON array: [{"name":"A","score":10},...]'></textarea>
+        <div class="import-actions">
+          <button id="importBtn" type="button" class="btn primary">Import</button>
+          <button id="cancelImport" type="button" class="btn">Cancel</button>
+        </div>
       </div>
 
-      <div class="field">
-        <label for="score" class="sr-only">Score</label>
-        <input id="score" type="number" value="0" />
+      <section class="table-wrap" aria-live="polite">
+        <table id="board" class="board">
+          <thead>
+            <tr><th scope="col">Rank</th><th scope="col">Player</th><th scope="col" class="score-col">Score</th><th scope="col">Actions</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+        <p id="emptyHint" class="muted empty-hint">No players yet — add one above.</p>
+      </section>
+    </section>
+
+    <!-- === 1v1 Battle section (added) === -->
+    <section id="battleSection" class="battle-section hidden" aria-hidden="true">
+      <div class="battle-controls">
+        <div class="names">
+          <label>
+            <span class="sr-only">Player 1 name</span>
+            <input id="b_player1_name" class="input-name" value="Player 1" />
+          </label>
+          <label>
+            <span class="sr-only">Player 2 name</span>
+            <input id="b_player2_name" class="input-name" value="Player 2" />
+          </label>
+        </div>
+
+        <div class="battle-timer">
+          <label class="timer-label">Timer:</label>
+          <input id="b_minutes" type="number" min="0" value="1" class="timer-input" /> :
+          <input id="b_seconds" type="number" min="0" max="59" value="30" class="timer-input" />
+          <button id="b_start" class="btn primary">Start</button>
+          <button id="b_pause" class="btn" disabled>Pause</button>
+          <button id="b_reset" class="btn">Reset</button>
+        </div>
       </div>
 
-      <div class="actions">
-        <button id="addBtn" class="btn primary">Add / Update</button>
-        <button id="clearBtn" type="button" class="btn">Clear All</button>
-        <button id="exportBtn" type="button" class="btn">Export</button>
-        <button id="importToggle" type="button" class="btn">Import</button>
-      </div>
-    </form>
+      <div class="battle-display">
+        <div class="player-panel p1">
+          <div class="player-name" id="b_display_name_1">Player 1</div>
+          <div class="player-score" id="b_score_1">0</div>
+          <div class="player-actions">
+            <button data-act="dec" data-player="1" class="btn small">-1</button>
+            <button data-act="inc" data-player="1" class="btn small primary">+1</button>
+          </div>
+        </div>
 
-    <div id="importArea" class="import hidden" aria-hidden="true">
-      <textarea id="importText" rows="4" placeholder='Paste JSON array: [{"name":"A","score":10},...]'></textarea>
-      <div class="import-actions">
-        <button id="importBtn" type="button" class="btn primary">Import</button>
-        <button id="cancelImport" type="button" class="btn">Cancel</button>
-      </div>
-    </div>
+        <div class="vs">VS</div>
 
-    <section class="table-wrap" aria-live="polite">
-      <table id="board" class="board">
-        <thead>
-          <tr><th scope="col">Rank</th><th scope="col">Player</th><th scope="col" class="score-col">Score</th><th scope="col">Actions</th></tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-      <p id="emptyHint" class="muted empty-hint">No players yet — add one above.</p>
+        <div class="player-panel p2">
+          <div class="player-name" id="b_display_name_2">Player 2</div>
+          <div class="player-score" id="b_score_2">0</div>
+          <div class="player-actions">
+            <button data-act="inc" data-player="2" class="btn small primary">+1</button>
+            <button data-act="dec" data-player="2" class="btn small">-1</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="battle-footer">
+        <div class="time-remaining muted" id="b_time_display">01:30</div>
+      </div>
+
+      <!-- winner overlay -->
+      <div id="b_winner_overlay" class="winner-overlay hidden" aria-hidden="true">
+        <div class="winner-card">
+          <h2 id="b_winner_text">Winner</h2>
+          <button id="b_close_winner" class="btn">Close</button>
+        </div>
+      </div>
     </section>
   </main>
 
