@@ -160,15 +160,15 @@
 
 
   /* -----------------------------
-     Battle module (new 1v1 mode)
+     Battle module (patched)
      ----------------------------- */
   const Battle = (function(){
     const STORAGE_KEY = 'scoreboard:1v1';
-    const modeKey = 'scoreboard:mode'; // also used by mode switcher
+    const modeKey = 'scoreboard:mode';
     let state = {
       p1: { name: 'Player 1', score: 0 },
       p2: { name: 'Player 2', score: 0 },
-      remaining: 90, // seconds
+      remaining: 90,
       running: false,
       intervalId: null
     };
@@ -190,35 +190,35 @@
     const bWinnerOverlay = document.getElementById('b_winner_overlay');
     const bWinnerText = document.getElementById('b_winner_text');
     const bCloseWinner = document.getElementById('b_close_winner');
+    const bPlayAgain = document.getElementById('b_play_again'); // optional, may be null
 
     // mode buttons (top-level)
     const modeLeaderboardBtn = document.getElementById('modeLeaderboard');
     const modeBattleBtn = document.getElementById('modeBattle');
     const leaderboardSection = document.getElementById('leaderboardSection');
 
-    // init
     function init(){
       bindUI();
       load();
-      updateUI();
+      hideWinner();    // ensure overlay hidden at start
       restoreMode();
     }
 
     function bindUI(){
       // name inputs -> update display and save
-      bP1NameIn.addEventListener('input', () => {
+      if (bP1NameIn) bP1NameIn.addEventListener('input', () => {
         state.p1.name = bP1NameIn.value || 'Player 1';
         bDisplayName1.textContent = state.p1.name;
         save();
       });
-      bP2NameIn.addEventListener('input', () => {
+      if (bP2NameIn) bP2NameIn.addEventListener('input', () => {
         state.p2.name = bP2NameIn.value || 'Player 2';
         bDisplayName2.textContent = state.p2.name;
         save();
       });
 
       // increment/decrement buttons (event delegation)
-      battleSection.addEventListener('click', (e) => {
+      if (battleSection) battleSection.addEventListener('click', (e) => {
         const btn = e.target.closest('button');
         if(!btn) return;
         const act = btn.dataset.act;
@@ -229,7 +229,7 @@
       });
 
       // timer controls
-      bStart.addEventListener('click', () => {
+      if (bStart) bStart.addEventListener('click', () => {
         // compute seconds from inputs
         const m = Math.max(0, Number(bMinutes.value) || 0);
         let s = Math.max(0, Number(bSeconds.value) || 0);
@@ -245,25 +245,38 @@
         save();
       });
 
-      bPause.addEventListener('click', () => {
+      if (bPause) bPause.addEventListener('click', () => {
         if(state.running) pauseTimer();
         else resumeTimer();
         updateTimerControls();
       });
 
-      bReset.addEventListener('click', () => {
+      if (bReset) bReset.addEventListener('click', () => {
         if(!confirm('Reset battle (scores and timer)?')) return;
         resetBattle();
       });
 
-      // winner overlay
-      bCloseWinner.addEventListener('click', () => {
+      // winner overlay close / play again
+      if (bCloseWinner) bCloseWinner.addEventListener('click', () => {
         hideWinner();
+      });
+      if (bPlayAgain) bPlayAgain.addEventListener('click', () => {
+        // Reset scores and timer to current inputs, then start
+        state.p1.score = 0;
+        state.p2.score = 0;
+        const m = Math.max(0, Number(bMinutes.value) || 0);
+        let s = Math.max(0, Number(bSeconds.value) || 0);
+        if(s >= 60) s = 59;
+        state.remaining = m*60 + s;
+        updateScores();
+        save();
+        hideWinner();
+        startTimer();
       });
 
       // mode switching
-      modeLeaderboardBtn.addEventListener('click', () => switchMode('leaderboard'));
-      modeBattleBtn.addEventListener('click', () => switchMode('battle'));
+      if (modeLeaderboardBtn) modeLeaderboardBtn.addEventListener('click', () => switchMode('leaderboard'));
+      if (modeBattleBtn) modeBattleBtn.addEventListener('click', () => switchMode('battle'));
     }
 
     function changeScore(playerNumber, delta){
@@ -276,13 +289,14 @@
 
     function flashScore(playerNumber){
       const el = playerNumber === 1 ? bScore1 : bScore2;
+      if(!el) return;
       el.style.transform = 'scale(1.06)';
       setTimeout(()=> el.style.transform = '', 140);
     }
 
     function updateScores(){
-      bScore1.textContent = state.p1.score;
-      bScore2.textContent = state.p2.score;
+      if(bScore1) bScore1.textContent = state.p1.score;
+      if(bScore2) bScore2.textContent = state.p2.score;
     }
 
     function secondsToMMSS(sec){
@@ -292,6 +306,7 @@
     }
 
     function updateTimeDisplay(){
+      if(!bTimeDisplay) return;
       bTimeDisplay.textContent = secondsToMMSS(state.remaining);
       // timer warning when low (<=10s)
       if(state.remaining <= 10){
@@ -321,6 +336,7 @@
       if(state.intervalId) clearInterval(state.intervalId);
       state.intervalId = null;
       state.running = false;
+      updateTimerControls();
     }
 
     function resumeTimer(){
@@ -335,6 +351,7 @@
         state.remaining -= 1;
         updateTimeDisplay();
       }, 1000);
+      updateTimerControls();
     }
 
     function stopTimer(){
@@ -345,6 +362,7 @@
     }
 
     function updateTimerControls(){
+      if(!bStart || !bPause) return;
       if(state.running){
         bStart.disabled = true;
         bPause.disabled = false;
@@ -360,11 +378,15 @@
       stopTimer();
       state.p1.score = 0;
       state.p2.score = 0;
-      state.remaining = (Number(bMinutes.value) || 0)*60 + (Number(bSeconds.value) || 0);
+      const m = Math.max(0, Number(bMinutes.value) || 0);
+      let s = Math.max(0, Number(bSeconds.value) || 0);
+      if(s >= 60) s = 59;
+      state.remaining = m*60 + s;
       if(state.remaining <= 0) state.remaining = 0;
       updateScores();
       updateTimeDisplay();
       save();
+      hideWinner();
     }
 
     function showWinnerByScore(){
@@ -372,41 +394,46 @@
       if(state.p1.score > state.p2.score) winnerText = state.p1.name + ' wins!';
       else if(state.p2.score > state.p1.score) winnerText = state.p2.name + ' wins!';
       else winnerText = "It's a tie!";
-      bWinnerText.textContent = winnerText;
-      bWinnerOverlay.classList.remove('hidden');
-      bWinnerOverlay.setAttribute('aria-hidden', 'false');
+      if (bWinnerText) bWinnerText.textContent = winnerText;
+      if (bWinnerOverlay) {
+        bWinnerOverlay.classList.remove('hidden');
+        bWinnerOverlay.setAttribute('aria-hidden', 'false');
+      }
     }
 
     function hideWinner(){
-      bWinnerOverlay.classList.add('hidden');
-      bWinnerOverlay.setAttribute('aria-hidden', 'true');
+      if (bWinnerOverlay) {
+        bWinnerOverlay.classList.add('hidden');
+        bWinnerOverlay.setAttribute('aria-hidden', 'true');
+      }
     }
 
     // Mode switching & persistence
     function switchMode(mode){
+      if(!battleSection || !leaderboardSection) return;
       if(mode === 'battle'){
-        // show battle
+        // show battle (dark styling is scoped to .battle-section in CSS)
         battleSection.classList.remove('hidden');
         battleSection.setAttribute('aria-hidden','false');
         leaderboardSection.classList.add('hidden');
         leaderboardSection.setAttribute('aria-hidden','true');
-        document.body.classList.add('battle-active');
-        modeBattleBtn.classList.add('active');
-        modeLeaderboardBtn.classList.remove('active');
-        modeBattleBtn.setAttribute('aria-selected','true');
-        modeLeaderboardBtn.setAttribute('aria-selected','false');
+        // do NOT toggle document.body class - avoid making entire page dark
+        if (modeBattleBtn) modeBattleBtn.classList.add('active');
+        if (modeLeaderboardBtn) modeLeaderboardBtn.classList.remove('active');
+        if (modeBattleBtn) modeBattleBtn.setAttribute('aria-selected','true');
+        if (modeLeaderboardBtn) modeLeaderboardBtn.setAttribute('aria-selected','false');
         localStorage.setItem(modeKey, 'battle');
+        hideWinner(); // ensure overlay hidden when entering battle mode
       } else {
         // show leaderboard
         battleSection.classList.add('hidden');
         battleSection.setAttribute('aria-hidden','true');
         leaderboardSection.classList.remove('hidden');
         leaderboardSection.setAttribute('aria-hidden','false');
-        document.body.classList.remove('battle-active');
-        modeBattleBtn.classList.remove('active');
-        modeLeaderboardBtn.classList.add('active');
-        modeBattleBtn.setAttribute('aria-selected','false');
-        modeLeaderboardBtn.setAttribute('aria-selected','true');
+        if (modeBattleBtn) modeBattleBtn.classList.remove('active');
+        if (modeLeaderboardBtn) modeLeaderboardBtn.classList.add('active');
+        if (modeBattleBtn) modeBattleBtn.setAttribute('aria-selected','false');
+        if (modeLeaderboardBtn) modeLeaderboardBtn.setAttribute('aria-selected','true');
         localStorage.setItem(modeKey, 'leaderboard');
       }
     }
@@ -443,10 +470,10 @@
         console.error('Failed loading battle', e);
       }
       // apply to UI
-      bP1NameIn.value = state.p1.name;
-      bP2NameIn.value = state.p2.name;
-      bDisplayName1.textContent = state.p1.name;
-      bDisplayName2.textContent = state.p2.name;
+      if (bP1NameIn) bP1NameIn.value = state.p1.name;
+      if (bP2NameIn) bP2NameIn.value = state.p2.name;
+      if (bDisplayName1) bDisplayName1.textContent = state.p1.name;
+      if (bDisplayName2) bDisplayName2.textContent = state.p2.name;
       updateScores();
       updateTimeDisplay();
       updateTimerControls();

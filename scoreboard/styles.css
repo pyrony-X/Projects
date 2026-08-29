@@ -142,13 +142,6 @@ header h1 { margin:0 0 6px 0; font-size:1.6rem; }
   background: linear-gradient(180deg, #070707, #0b0b0d);
   color: var(--battle-text);
 }
-
-/* Make the whole page dark when battle is active by adding class 'battle-active' to body (JS will toggle) */
-body.battle-active {
-  background: #000000;
-  color: var(--battle-text);
-}
-
 /* battle controls */
 .battle-controls { display:flex; gap:12px; align-items:center; justify-content:space-between; margin-bottom:18px; flex-wrap:wrap; }
 .battle-controls .names { display:flex; gap:10px; align-items:center; }
@@ -171,13 +164,19 @@ body.battle-active {
 
 /* winner overlay */
 .winner-overlay {
-  position:fixed;
-  inset:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: rgba(0,0,0,0.6);
-  z-index:1000;
+  z-index: 1000;
+  pointer-events: auto;
+}
+
+.winner-overlay.hidden {
+  display: none;
+  pointer-events: none;
 }
 .winner-card {
   background: #0f1720;
