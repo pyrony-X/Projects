@@ -1,202 +1,154 @@
-let team1Score = 0;
-let team2Score = 0;
+(function(){
+  const KEY = 'scoreboard:v1';
+  let players = [];
 
-let team1Name = "";
-let team2Name = "";
+  // DOM
+  const nameIn = document.getElementById('name');
+  const scoreIn = document.getElementById('score');
+  const addBtn = document.getElementById('addBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const exportBtn = document.getElementById('exportBtn');
+  const importToggle = document.getElementById('importToggle');
+  const importArea = document.getElementById('importArea');
+  const importText = document.getElementById('importText');
+  const importBtn = document.getElementById('importBtn');
+  const cancelImport = document.getElementById('cancelImport');
+  const tbody = document.querySelector('#board tbody');
+  const emptyHint = document.getElementById('emptyHint');
 
-let timeLeft = 60;
-let timer = null;
-let paused = false;
-
-
-// ---------------------------
-// Get HTML elements
-// ---------------------------
-
-const setup = document.getElementById("setup");
-const game = document.getElementById("game");
-
-const team1NameInput = document.getElementById("team1Name");
-const team2NameInput = document.getElementById("team2Name");
-const timeInput = document.getElementById("timeInput");
-
-const team1Display = document.getElementById("team1Display");
-const team2Display = document.getElementById("team2Display");
-
-const team1ScoreDisplay = document.getElementById("team1Score");
-const team2ScoreDisplay = document.getElementById("team2Score");
-
-const timerDisplay = document.getElementById("timer");
-
-const winnerDisplay = document.getElementById("winner");
-
-
-// ---------------------------
-// Start game
-// ---------------------------
-
-document.getElementById("startButton").addEventListener("click", function () {
-
-    team1Name = team1NameInput.value.trim();
-    team2Name = team2NameInput.value.trim();
-
-    const enteredTime = Number(timeInput.value);
-
-    if (!team1Name || !team2Name || enteredTime <= 0) {
-        alert("Please enter both team names and a valid time.");
-        return;
+  // Load from localStorage
+  function load() {
+    try {
+      const raw = localStorage.getItem(KEY);
+      players = raw ? JSON.parse(raw) : [];
+    } catch(e) {
+      console.error('Failed loading scoreboard', e);
+      players = [];
     }
+    render();
+  }
 
-    timeLeft = enteredTime;
+  function save() {
+    localStorage.setItem(KEY, JSON.stringify(players));
+  }
 
-    team1Display.textContent = team1Name;
-    team2Display.textContent = team2Name;
-
-    timerDisplay.textContent = timeLeft;
-
-    setup.style.display = "none";
-    game.style.display = "flex";
-
-    startTimer();
-});
-
-
-// ---------------------------
-// Team 1 +1
-// ---------------------------
-
-document.getElementById("team1Plus").addEventListener("click", function () {
-
-    team1Score++;
-
-    team1ScoreDisplay.textContent = team1Score;
-});
-
-
-// ---------------------------
-// Team 1 -1
-// ---------------------------
-
-document.getElementById("team1Minus").addEventListener("click", function () {
-
-    if (team1Score > 0) {
-        team1Score--;
-    }
-
-    team1ScoreDisplay.textContent = team1Score;
-});
-
-
-// ---------------------------
-// Team 2 +1
-// ---------------------------
-
-document.getElementById("team2Plus").addEventListener("click", function () {
-
-    team2Score++;
-
-    team2ScoreDisplay.textContent = team2Score;
-});
-
-
-// ---------------------------
-// Team 2 -1
-// ---------------------------
-
-document.getElementById("team2Minus").addEventListener("click", function () {
-
-    if (team2Score > 0) {
-        team2Score--;
-    }
-
-    team2ScoreDisplay.textContent = team2Score;
-});
-
-
-// ---------------------------
-// Timer
-// ---------------------------
-
-function startTimer() {
-
-    clearInterval(timer);
-
-    timer = setInterval(function () {
-
-        if (!paused && timeLeft > 0) {
-
-            timeLeft--;
-
-            timerDisplay.textContent = timeLeft;
-
-            if (timeLeft === 0) {
-                clearInterval(timer);
-                showWinner();
-            }
-        }
-
-    }, 1000);
-}
-
-
-// ---------------------------
-// Pause / Resume
-// ---------------------------
-
-document.getElementById("pauseButton").addEventListener("click", function () {
-
-    paused = !paused;
-
-    if (paused) {
-        this.textContent = "RESUME";
+  function render() {
+    // sort by score desc then name
+    players.sort((a,b) => b.score - a.score || a.name.localeCompare(b.name));
+    tbody.innerHTML = '';
+    if(players.length === 0){
+      emptyHint.style.display = 'block';
     } else {
-        this.textContent = "PAUSE";
+      emptyHint.style.display = 'none';
     }
-});
+    players.forEach((p, i) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="rank">${i+1}</td>
+        <td class="player">${escapeHtml(p.name)}</td>
+        <td class="score">${p.score}</td>
+        <td class="row-actions">
+          <button data-act="inc" data-name="${escapeAttr(p.name)}" class="small">+1</button>
+          <button data-act="dec" data-name="${escapeAttr(p.name)}" class="small">-1</button>
+          <button data-act="edit" data-name="${escapeAttr(p.name)}" class="small">Edit</button>
+          <button data-act="del" data-name="${escapeAttr(p.name)}" class="small danger">Delete</button>
+        </td>`;
+      tbody.appendChild(tr);
+    });
+  }
 
+  // helpers
+  function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function escapeAttr(s){ return String(s).replace(/"/g,'&quot;'); }
 
-// ---------------------------
-// Winner
-// ---------------------------
-
-function showWinner() {
-
-    if (team1Score > team2Score) {
-        winnerDisplay.textContent = team1Name + " WINS!";
-    } else if (team2Score > team1Score) {
-        winnerDisplay.textContent = team2Name + " WINS!";
+  // add or update
+  addBtn.addEventListener('click', () => {
+    const name = nameIn.value.trim();
+    const score = Number(scoreIn.value) || 0;
+    if(!name) return alert('Enter a player name');
+    const idx = players.findIndex(p => p.name === name);
+    if(idx >= 0){
+      players[idx].score = score;
     } else {
-        winnerDisplay.textContent = "DRAW!";
+      players.push({name, score});
     }
+    save();
+    render();
+    nameIn.value = ''; scoreIn.value = 0;
+    nameIn.focus();
+  });
 
-    winnerDisplay.style.display = "block";
-}
+  // table actions
+  tbody.addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if(!btn) return;
+    const act = btn.dataset.act;
+    const name = btn.dataset.name;
+    const idx = players.findIndex(p => p.name === name);
+    if(idx === -1) return;
+    if(act === 'inc') { players[idx].score = Number(players[idx].score) + 1; }
+    if(act === 'dec') { players[idx].score = Number(players[idx].score) - 1; }
+    if(act === 'edit') {
+      nameIn.value = players[idx].name;
+      scoreIn.value = players[idx].score;
+      nameIn.focus();
+    }
+    if(act === 'del') {
+      if(!confirm('Delete ' + name + '?')) return;
+      players.splice(idx,1);
+    }
+    save();
+    render();
+  });
 
+  clearBtn.addEventListener('click', () => {
+    if(confirm('Clear all players?')) {
+      players = [];
+      save();
+      render();
+    }
+  });
 
-// ---------------------------
-// Reset
-// ---------------------------
+  exportBtn.addEventListener('click', () => {
+    const data = JSON.stringify(players, null, 2);
+    const blob = new Blob([data], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'scoreboard.json'; document.body.appendChild(a); a.click();
+    a.remove(); URL.revokeObjectURL(url);
+  });
 
-document.getElementById("resetButton").addEventListener("click", function () {
+  importToggle.addEventListener('click', () => {
+    const isHidden = importArea.classList.toggle('hidden');
+    importArea.setAttribute('aria-hidden', isHidden ? 'true' : 'false');
+    if(!isHidden) importText.focus();
+  });
+  cancelImport.addEventListener('click', () => {
+    importArea.classList.add('hidden');
+    importArea.setAttribute('aria-hidden', 'true');
+  });
+  importBtn.addEventListener('click', () => {
+    try {
+      const arr = JSON.parse(importText.value);
+      if(!Array.isArray(arr)) throw new Error('Expected array');
+      // basic validation and normalize
+      players = arr.map(x => ({ name: String(x.name), score: Number(x.score) || 0 }));
+      save();
+      render();
+      importArea.classList.add('hidden');
+      importArea.setAttribute('aria-hidden', 'true');
+      importText.value = '';
+    } catch(e) {
+      alert('Invalid JSON: ' + e.message);
+    }
+  });
 
-    clearInterval(timer);
+  // keyboard: Enter in name field adds
+  nameIn.addEventListener('keydown', (e) => { if(e.key === 'Enter') addBtn.click(); });
 
-    team1Score = 0;
-    team2Score = 0;
+  // initialize
+  load();
 
-    team1ScoreDisplay.textContent = 0;
-    team2ScoreDisplay.textContent = 0;
-
-    winnerDisplay.style.display = "none";
-
-    paused = false;
-
-    document.getElementById("pauseButton").textContent = "PAUSE";
-
-    setup.style.display = "block";
-    game.style.display = "none";
-
-    team1NameInput.value = "";
-    team2NameInput.value = "";
-    timeInput.value = "";
-});
+  // expose for debugging (optional)
+  window.__scoreboard = { get players(){ return players; }, save, load };
+})();

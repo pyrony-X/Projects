@@ -1,64 +1,56 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scoreboard</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="utf-8" />
+  <title>Scoreboard</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="styles.css">
 </head>
-
 <body>
+  <main class="container">
+    <header>
+      <h1>Scoreboard</h1>
+      <p class="muted">Add players, adjust scores, and the board persists in your browser. Sorted by score (desc).</p>
+    </header>
 
-    <div class="setup" id="setup">
-        <h1>Scoreboard</h1>
+    <form id="addForm" class="controls" onsubmit="return false;">
+      <div class="field">
+        <label for="name" class="sr-only">Player name</label>
+        <input id="name" placeholder="Player name" required autocomplete="off" />
+      </div>
 
-        <input type="text" id="team1Name" placeholder="Team 1 name">
-        <input type="text" id="team2Name" placeholder="Team 2 name">
+      <div class="field">
+        <label for="score" class="sr-only">Score</label>
+        <input id="score" type="number" value="0" />
+      </div>
 
-        <input
-            type="number"
-            id="timeInput"
-            placeholder="Time in seconds"
-            min="1"
-        >
+      <div class="actions">
+        <button id="addBtn" class="btn primary">Add / Update</button>
+        <button id="clearBtn" type="button" class="btn">Clear All</button>
+        <button id="exportBtn" type="button" class="btn">Export</button>
+        <button id="importToggle" type="button" class="btn">Import</button>
+      </div>
+    </form>
 
-        <button id="startButton">START</button>
+    <div id="importArea" class="import hidden" aria-hidden="true">
+      <textarea id="importText" rows="4" placeholder='Paste JSON array: [{"name":"A","score":10},...]'></textarea>
+      <div class="import-actions">
+        <button id="importBtn" type="button" class="btn primary">Import</button>
+        <button id="cancelImport" type="button" class="btn">Cancel</button>
+      </div>
     </div>
 
+    <section class="table-wrap" aria-live="polite">
+      <table id="board" class="board">
+        <thead>
+          <tr><th scope="col">Rank</th><th scope="col">Player</th><th scope="col" class="score-col">Score</th><th scope="col">Actions</th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <p id="emptyHint" class="muted empty-hint">No players yet — add one above.</p>
+    </section>
+  </main>
 
-    <div class="game" id="game">
-
-        <div class="team">
-            <h2 id="team1Display">Team 1</h2>
-            <div class="score" id="team1Score">0</div>
-
-            <button class="plus" id="team1Plus">+1</button>
-            <button class="minus" id="team1Minus">-1</button>
-        </div>
-
-
-        <div class="middle">
-            <div class="timer" id="timer">60</div>
-            <button id="pauseButton">PAUSE</button>
-            <button id="resetButton">RESET</button>
-        </div>
-
-
-        <div class="team">
-            <h2 id="team2Display">Team 2</h2>
-            <div class="score" id="team2Score">0</div>
-
-            <button class="plus" id="team2Plus">+1</button>
-            <button class="minus" id="team2Minus">-1</button>
-        </div>
-
-    </div>
-
-
-    <div class="winner" id="winner"></div>
-
-
-    <script src="script.js"></script>
-
+  <script src="script.js" defer></script>
 </body>
 </html>
